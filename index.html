@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login e Cadastro com Firebase</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .form-container {
+            padding: 30px;
+        }
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #5cb85c;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #4cae4c;
+        }
+        .toggle-button {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #007bff;
+            cursor: pointer;
+        }
+        .toggle-button:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="container">
+        <div class="form-container" id="login-container">
+            <h2>Login</h2>
+            <form id="login-form">
+                <input type="email" id="login-email" placeholder="Email" required>
+                <input type="password" id="login-password" placeholder="Senha" required>
+                <button type="submit">Entrar</button>
+            </form>
+            <span class="toggle-button" onclick="toggleForms()">Não tem uma conta? Cadastre-se</span>
+        </div>
+        <div class="form-container" id="register-container" style="display: none;">
+            <h2>Cadastro</h2>
+            <form id="register-form">
+                <input type="text" id="register-name" placeholder="Nome" required>
+                <input type="email" id="register-email" placeholder="Email" required>
+                <input type="password" id="register-password" placeholder="Senha" required>
+                <button type="submit">Cadastrar</button>
+            </form>
+            <span class="toggle-button" onclick="toggleForms()">Já tem uma conta? Entrar</span>
+        </div>
+    </div>
+
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+
+    <!-- Add Firebase products that you want to use -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {
+            apiKey: "AIzaSyBkrBLKuklZgPm1nz2G997ULiYycZMb9F8",
+            authDomain: "avisoseeventos.firebaseapp.com",
+            projectId: "avisoseeventos",
+            storageBucket: "avisoseeventos.appspot.com",
+            messagingSenderId: "247706769451",
+            appId: "1:247706769451:web:ce31cd9d0ca22cd267b26e"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        function toggleForms() {
+            const loginContainer = document.getElementById('login-container');
+            const registerContainer = document.getElementById('register-container');
+            if (loginContainer.style.display === "none") {
+                loginContainer.style.display = "block";
+                registerContainer.style.display = "none";
+            } else {
+                loginContainer.style.display = "none";
+                registerContainer.style.display = "block";
+            }
+        }
+
+        function navigateToEventsPage() {
+            window.location.href = 'events.html';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    console.log('Login bem-sucedido:', userCredential.user);
+                    navigateToEventsPage();
+                })
+                .catch((error) => {
+                    console.error('Erro no login:', error.message);
+                });
+        });
+
+        document.getElementById('register-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    return db.collection('users').doc(user.uid).set({
+                        name: name,
+                        email: email
+                    });
+                })
+                .then(() => {
+                    console.log('Cadastro bem-sucedido');
+                    navigateToEventsPage();
+                })
+                .catch((error) => {
+                    console.error('Erro no cadastro:', error.message);
+                });
+        });
+    </script>
+</body>
+</html>
